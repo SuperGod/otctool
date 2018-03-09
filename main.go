@@ -1,14 +1,24 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"time"
 
 	client "github.com/influxdata/influxdb/client/v2"
 )
 
+var (
+	configFile = flag.String("c", "config.json", "config file")
+)
+
 func main() {
-	cfg := Config{}
+	flag.Parse()
+
+	cfg, err := LoadConfig(*configFile)
+	if err != nil {
+		panic(err)
+	}
 	clt, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr:     cfg.Influx.Addr,
 		Username: cfg.Influx.User,

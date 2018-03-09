@@ -1,0 +1,9 @@
+{
+  "influx": {
+    "addr": "http://localhost:8086",
+    "user": "root",
+    "pwd": "root",
+    "db": "blockchain"
+  },
+  "sleep": 60
+}
