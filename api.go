@@ -9,16 +9,29 @@ import (
 	"strconv"
 )
 
+type Ticker struct {
+	Buy  string
+	Sell string
+	Low  string
+	High string
+	Last string
+	Vol  string
+}
+
+func (t *Ticker) ToMap() map[string]interface{} {
+	data := make(map[string]interface{})
+	data["buy"], _ = strconv.ParseFloat(t.Buy, 64)
+	data["sell"], _ = strconv.ParseFloat(t.Sell, 64)
+	data["low"], _ = strconv.ParseFloat(t.Low, 64)
+	data["high"], _ = strconv.ParseFloat(t.High, 64)
+	data["last"], _ = strconv.ParseFloat(t.Last, 64)
+	data["vol"], _ = strconv.ParseFloat(t.Vol, 64)
+	return data
+}
+
 type TickerInfo struct {
 	At     int64
-	Ticker struct {
-		Buy  string
-		Sell string
-		Low  string
-		High string
-		Last string
-		Vol  string
-	}
+	Ticker Ticker
 }
 
 type Api struct {
@@ -61,4 +74,8 @@ func (api *Api) GetPrice(from, to string) (price float64, err error) {
 	}
 	price, err = strconv.ParseFloat(v.Ticker.Last, 64)
 	return
+}
+
+func (api *Api) Datas() map[string]*TickerInfo {
+	return api.cache
 }
