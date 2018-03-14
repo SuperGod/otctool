@@ -3,14 +3,19 @@ package main
 import (
 	"flag"
 	"log"
-	"time"
 
+	"github.com/SuperGod/otctool/exchange"
 	client "github.com/influxdata/influxdb/client/v2"
 )
 
 var (
 	configFile = flag.String("c", "config.json", "config file")
 )
+
+type Chainer interface {
+	Start() error
+	Message() chan *client.Point
+}
 
 func main() {
 	flag.Parse()
@@ -28,32 +33,28 @@ func main() {
 		panic(err.Error())
 	}
 	defer clt.Close()
-	api := NewApi("https://bb.otcbtc.com")
-	for {
-		time.Sleep(time.Duration(cfg.Sleep) * time.Second)
-		err = api.Refresh()
-		if err != nil {
-			log.Println(err.Error())
-			continue
-		}
-		tags := make(map[string]string)
-		bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-			Database:  cfg.Influx.DB,
-			Precision: "s",
-		})
-		var pt *client.Point
-		for k, v := range api.Datas() {
-			tags["chain"] = k
-			pt, err = client.NewPoint("block", tags, v.Ticker.ToMap(), time.Now())
-			if err != nil {
-				log.Println("create point error:", err.Error())
-				continue
-			}
-			bp.AddPoint(pt)
+	api := exchange.NewOTCBTC("https://bb.otcbtc.com")
+
+	batch := cfg.Batch
+	if batch == 0 {
+		batch = 10
+	}
+	var bp client.BatchPoints
+	n := 0
+	for pt := range api.Message() {
+		if n%batch == 0 {
 			err = clt.Write(bp)
 			if err != nil {
 				log.Println("write point error:", err.Error())
+				n++
+				continue
 			}
+			bp, _ = client.NewBatchPoints(client.BatchPointsConfig{
+				Database:  cfg.Influx.DB,
+				Precision: "s",
+			})
 		}
+		bp.AddPoint(pt)
+		n++
 	}
 }

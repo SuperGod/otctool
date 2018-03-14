@@ -14,6 +14,7 @@ type Config struct {
 		DB   string `json:"db"`
 	}
 	Sleep int64 // sleep seconds
+	Batch int
 }
 
 func LoadConfig(configFile string) (cfg *Config, err error) {
