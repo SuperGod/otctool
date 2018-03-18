@@ -14,7 +14,8 @@
       },
       "currency": [
         "eos_usdt"
-      ]
+      ],
+      "batch": 5
     }
   }
 }

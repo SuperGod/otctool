@@ -9,6 +9,7 @@ import (
 type Source struct {
 	DB     string `json:"db"`
 	Params map[string]string
+	Batch  int
 }
 
 type Config struct {

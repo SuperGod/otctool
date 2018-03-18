@@ -18,6 +18,7 @@ type CommonApi struct {
 	data          chan *client.Point
 	currencyPairs []goex.CurrencyPair
 	errs          chan error
+	batch         int
 }
 
 func NewHuoBi(source *cfg.Source, currency []string) (commonApi *CommonApi, err error) {
@@ -26,17 +27,19 @@ func NewHuoBi(source *cfg.Source, currency []string) (commonApi *CommonApi, err 
 		err = fmt.Errorf("no key of huobi ")
 		return
 	}
-	commonApi = new(CommonApi)
+
 	secret, ok := source.Params["secret"]
 	if !ok {
 		err = fmt.Errorf("no secret of huobi ")
 		return
 	}
+
+	commonApi = NewHuoBiApiByKey(key, secret)
+	commonApi.errs = make(chan error, 1024)
 	for _, v := range currency {
 		commonApi.currencyPairs = append(commonApi.currencyPairs, goex.NewCurrencyPair2(v))
 	}
-	commonApi.errs = make(chan error, 1024)
-	commonApi = NewHuoBiApiByKey(key, secret)
+	commonApi.batch = source.Batch
 	return
 }
 
@@ -49,8 +52,13 @@ func NewHuoBiApiByKey(accessKey, secretKey string) (commonApi *CommonApi) {
 }
 
 func (cApi *CommonApi) Start() (err error) {
-	go cApi.getTicker()
-	// go cApi.getDepth()
+	go func() {
+		for {
+			cApi.getTicker()
+			// go cApi.getDepth()
+			time.Sleep(time.Duration(cApi.batch) * time.Second)
+		}
+	}()
 	go cApi.logError()
 	return
 }
