@@ -48,6 +48,10 @@ func main() {
 		batch = 10
 	}
 	var bp client.BatchPoints
+	bp, _ = client.NewBatchPoints(client.BatchPointsConfig{
+		Database:  api.DB(),
+		Precision: "s",
+	})
 	n := 0
 	api.Start()
 	for pt := range api.Message() {
