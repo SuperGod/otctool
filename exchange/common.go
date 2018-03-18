@@ -6,10 +6,16 @@ import (
 	"net/http"
 	"time"
 
+	goex "github.com/SuperGod/GoEx"
+	"github.com/SuperGod/GoEx/huobi"
 	"github.com/SuperGod/otctool/cfg"
 	client "github.com/influxdata/influxdb/client/v2"
-	"github.com/nntaoli-project/GoEx"
-	"github.com/nntaoli-project/GoEx/huobi"
+)
+
+var (
+	CurrencyMap = map[string]goex.CurrencyPair{"eos_usdt": goex.EOS_USDT,
+		"eos_btc":  goex.EOS_BTC,
+		"btc_usdt": goex.BTC_USDT}
 )
 
 type CommonApi struct {
@@ -33,20 +39,29 @@ func NewHuoBi(source *cfg.Source, currency []string) (commonApi *CommonApi, err 
 		err = fmt.Errorf("no secret of huobi ")
 		return
 	}
-
-	commonApi = NewHuoBiApiByKey(key, secret)
+	accountID, ok := source.Params["account"]
+	if !ok {
+		err = fmt.Errorf("no account id of huobi ")
+		return
+	}
+	commonApi = NewHuoBiApiByKey(key, secret, accountID)
 	commonApi.errs = make(chan error, 1024)
 	for _, v := range currency {
-		commonApi.currencyPairs = append(commonApi.currencyPairs, goex.NewCurrencyPair2(v))
+		pair, ok := CurrencyMap[v]
+		if !ok {
+			log.Println("unsupport currency pair:", v)
+			continue
+		}
+		commonApi.currencyPairs = append(commonApi.currencyPairs, pair)
 	}
 	commonApi.batch = source.Batch
 	return
 }
 
-func NewHuoBiApiByKey(accessKey, secretKey string) (commonApi *CommonApi) {
+func NewHuoBiApiByKey(accessKey, secretKey, accountID string) (commonApi *CommonApi) {
 	clt := &http.Client{}
 	commonApi = new(CommonApi)
-	commonApi.api = huobi.New(clt, accessKey, secretKey)
+	commonApi.api = huobi.NewHuobiProWithAddr(clt, accessKey, secretKey, accountID, "https://api.huobipro.com")
 	commonApi.data = make(chan *client.Point, 1024)
 	return
 }
@@ -77,6 +92,7 @@ func (cApi *CommonApi) getTicker() {
 	for _, v := range cApi.currencyPairs {
 		t, err = cApi.api.GetTicker(v)
 		if err != nil {
+			log.Println("get ticker failed:", err.Error(), v)
 			cApi.errs <- err
 			continue
 		}
@@ -124,7 +140,7 @@ func (cApi *CommonApi) DB() string {
 }
 
 func Ticker2Map(t *goex.Ticker) (date time.Time, data map[string]interface{}) {
-	date = time.Unix(int64(t.Date), 0)
+	date = time.Unix(int64(t.Date/1000), 0)
 	data = make(map[string]interface{})
 	data["last"] = t.Last
 	data["buy"] = t.Buy
