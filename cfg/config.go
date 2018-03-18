@@ -7,7 +7,7 @@ import (
 )
 
 type Source struct {
-	DB     string
+	DB     string `json:"db"`
 	Params map[string]string
 }
 

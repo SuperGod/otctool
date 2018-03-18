@@ -2,8 +2,19 @@
   "influx": {
     "addr": "http://localhost:8086",
     "user": "root",
-    "pwd": "root",
-    "db": "blockchain"
+    "pwd": "root"
   },
-  "sleep": 60
+  "sleep": 4,
+  "sources": {
+    "huobi": {
+      "db": "huobi",
+      "params": {
+        "key": "",
+        "secret": ""
+      },
+      "currency": [
+        "eos_usdt"
+      ]
+    }
+  }
 }
