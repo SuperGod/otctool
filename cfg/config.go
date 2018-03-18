@@ -1,10 +1,15 @@
-package main
+package cfg
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
 )
+
+type Source struct {
+	DB     string
+	Params map[string]string
+}
 
 type Config struct {
 	Influx struct {
@@ -13,8 +18,10 @@ type Config struct {
 		Pwd  string
 		DB   string `json:"db"`
 	}
-	Sleep int64 // sleep seconds
-	Batch int
+	Currency []string
+	Sources  map[string]*Source
+	Sleep    int64 // sleep seconds
+	Batch    int
 }
 
 func LoadConfig(configFile string) (cfg *Config, err error) {
