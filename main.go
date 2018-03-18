@@ -49,6 +49,7 @@ func main() {
 	}
 	var bp client.BatchPoints
 	n := 0
+	api.Start()
 	for pt := range api.Message() {
 		if n%batch == 0 {
 			err = clt.Write(bp)
