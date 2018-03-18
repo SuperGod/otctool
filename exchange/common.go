@@ -55,6 +55,7 @@ func NewHuoBi(source *cfg.Source, currency []string) (commonApi *CommonApi, err 
 		commonApi.currencyPairs = append(commonApi.currencyPairs, pair)
 	}
 	commonApi.batch = source.Batch
+	commonApi.db = source.DB
 	return
 }
 
