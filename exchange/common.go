@@ -26,6 +26,7 @@ func NewHuoBi(source *cfg.Source, currency []string) (commonApi *CommonApi, err 
 		err = fmt.Errorf("no key of huobi ")
 		return
 	}
+	commonApi = new(CommonApi)
 	secret, ok := source.Params["secret"]
 	if !ok {
 		err = fmt.Errorf("no secret of huobi ")
