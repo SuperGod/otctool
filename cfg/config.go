@@ -30,6 +30,7 @@ func LoadConfig(configFile string) (cfg *Config, err error) {
 	if err != nil {
 		return
 	}
+	defer f.Close()
 	buf, err := ioutil.ReadAll(f)
 	if err != nil {
 		return
